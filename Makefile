@@ -1,4 +1,6 @@
-.PHONY: help init-backend stage-init prod-init init-all stage-plan stage-apply prod-plan prod-apply debug-stage debug-prod infracost fmt validate
+.PHONY: help init-backend stage-init prod-init init-all stage-plan stage-apply prod-plan prod-apply \
+	stage-destroy prod-destroy stage-destroy-all prod-destroy-all \
+	debug-stage debug-prod infracost fmt validate
 
 AWS_REGION := us-east-1
 
@@ -57,6 +59,36 @@ prod-plan: ## Plan Terraform changes for prod
 
 prod-apply: ## Apply Terraform changes for prod
 	@env $(CREDENTIAL_ENV) terraform apply $(PROD_FLAGS)
+
+# --- DESTROY COMMANDS ---
+
+stage-destroy: ## Destroy stage infrastructure (keeps state bucket)
+	@env $(CREDENTIAL_ENV) terraform destroy $(STAGE_FLAGS)
+
+prod-destroy: ## Destroy prod infrastructure (keeps state bucket)
+	@env $(CREDENTIAL_ENV) terraform destroy $(PROD_FLAGS)
+
+stage-destroy-all: ## Destroy stage infra + delete state bucket (including all versions)
+	@echo "Destroying stage infrastructure..."
+	@env $(CREDENTIAL_ENV) terraform destroy -auto-approve $(STAGE_FLAGS)
+	@echo "Deleting all versions in state bucket: $(TF_STATE_BUCKET_NAME)"
+	@aws s3api list-object-versions --bucket $(TF_STATE_BUCKET_NAME) --profile $(AWS_PROFILE) --output json | \
+		jq '{Objects: ([.Versions[], .DeleteMarkers[]] | map({Key:.Key, VersionId:.VersionId})), Quiet: true}' | \
+		aws s3api delete-objects --bucket $(TF_STATE_BUCKET_NAME) --delete file:///dev/stdin --profile $(AWS_PROFILE)
+	@echo "Deleting state bucket: $(TF_STATE_BUCKET_NAME)"
+	@aws s3 rb s3://$(TF_STATE_BUCKET_NAME) --region $(AWS_REGION) --profile $(AWS_PROFILE)
+
+prod-destroy-all: ## Destroy prod infra + delete state bucket (including all versions)
+	@echo "Destroying prod infrastructure..."
+	@env $(CREDENTIAL_ENV) terraform destroy -auto-approve $(PROD_FLAGS)
+	@echo "Deleting all versions in state bucket: $(TF_STATE_BUCKET_NAME)"
+	@aws s3api list-object-versions --bucket $(TF_STATE_BUCKET_NAME) --profile $(AWS_PROFILE) --output json | \
+		jq '{Objects: ([.Versions[], .DeleteMarkers[]] | map({Key:.Key, VersionId:.VersionId})), Quiet: true}' | \
+		aws s3api delete-objects --bucket $(TF_STATE_BUCKET_NAME) --delete file:///dev/stdin --profile $(AWS_PROFILE)
+	@echo "Deleting state bucket: $(TF_STATE_BUCKET_NAME)"
+	@aws s3 rb s3://$(TF_STATE_BUCKET_NAME) --region $(AWS_REGION) --profile $(AWS_PROFILE)
+
+# --- DEBUG & UTILITIES ---
 
 # Debug command to see what files are loaded
 debug-stage: ## Debug: list stage .tfvars files
