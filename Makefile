@@ -5,6 +5,9 @@ AWS_REGION := us-east-1
 # terraform state details
 TF_STATE_BUCKET_NAME := forger-tfstate-$(shell aws sts get-caller-identity --profile $(AWS_PROFILE) --query "Account" --output text)
 
+# Export actual credentials as env vars (only works with AWS CLI >= 2.13.0)
+CREDENTIAL_ENV := $(shell aws configure export-credentials --profile $(AWS_PROFILE) --format env | sed 's/^export //')
+
 # Auto-detect all tfvars files for each environment
 STAGE_TFVARS := $(wildcard environments/stage/*.tfvars)
 PROD_TFVARS := $(wildcard environments/prod/*.tfvars)
@@ -27,13 +30,13 @@ init-backend: ## Create S3 bucket for Terraform remote state
 	@echo "Terraform backend bucket '$(TF_STATE_BUCKET_NAME)' is ready."
 
 stage-init: ## Initialize Terraform backend for stage
-	terraform init -reconfigure \
+	@env $(CREDENTIAL_ENV) terraform init --reconfigure \
 		-backend-config="bucket=$(TF_STATE_BUCKET_NAME)" \
 		-backend-config="key=stage/terraform.tfstate" \
 		-backend-config="region=$(AWS_REGION)"
 
 prod-init: ## Initialize Terraform backend for prod
-	terraform init -reconfigure \
+	@env $(CREDENTIAL_ENV) terraform init --reconfigure \
 		-backend-config="bucket=$(TF_STATE_BUCKET_NAME)" \
 		-backend-config="key=prod/terraform.tfstate" \
 		-backend-config="region=$(AWS_REGION)"
@@ -43,17 +46,17 @@ init-all: ## Initialize both stage and prod backends
 
 stage-plan: ## Plan Terraform changes for stage
 	@echo "Loading stage tfvars: $(STAGE_TFVARS)"
-	AWS_PROFILE=$(AWS_PROFILE) terraform plan $(STAGE_FLAGS)
+	@env $(CREDENTIAL_ENV) terraform plan $(STAGE_FLAGS)
 
 stage-apply: ## Apply Terraform changes for stage
-	AWS_PROFILE=$(AWS_PROFILE) terraform apply $(STAGE_FLAGS)
+	@env $(CREDENTIAL_ENV) terraform apply $(STAGE_FLAGS)
 
 prod-plan: ## Plan Terraform changes for prod
 	@echo "Loading prod tfvars: $(PROD_TFVARS)"
-	AWS_PROFILE=$(AWS_PROFILE) terraform plan $(PROD_FLAGS)
+	@env $(CREDENTIAL_ENV) terraform plan $(PROD_FLAGS)
 
 prod-apply: ## Apply Terraform changes for prod
-	AWS_PROFILE=$(AWS_PROFILE) terraform apply $(PROD_FLAGS)
+	@env $(CREDENTIAL_ENV) terraform apply $(PROD_FLAGS)
 
 # Debug command to see what files are loaded
 debug-stage: ## Debug: list stage .tfvars files
