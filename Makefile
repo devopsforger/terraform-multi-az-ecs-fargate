@@ -1,0 +1,76 @@
+.PHONY: help init-backend stage-init prod-init init-all stage-plan stage-apply prod-plan prod-apply debug-stage debug-prod infracost fmt validate
+
+AWS_REGION := us-east-1
+
+# terraform state details
+TF_STATE_BUCKET_NAME := forger-tfstate-$(shell aws sts get-caller-identity --profile $(AWS_PROFILE) --query "Account" --output text)
+
+# Auto-detect all tfvars files for each environment
+STAGE_TFVARS := $(wildcard environments/stage/*.tfvars)
+PROD_TFVARS := $(wildcard environments/prod/*.tfvars)
+
+# Convert file list to -var-file flags
+STAGE_FLAGS := $(foreach file,$(STAGE_TFVARS),-var-file=$(file))
+PROD_FLAGS := $(foreach file,$(PROD_TFVARS),-var-file=$(file))
+
+help: ## Show this help
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+init-backend: ## Create S3 bucket for Terraform remote state
+	@echo "Creating S3 bucket for Terraform state..."
+	aws s3 mb s3://$(TF_STATE_BUCKET_NAME) --region $(AWS_REGION) --profile $(AWS_PROFILE)
+	@echo "Enabling versioning on the state bucket..."
+	aws s3api put-bucket-versioning \
+		--bucket $(TF_STATE_BUCKET_NAME) \
+		--versioning-configuration Status=Enabled \
+		--profile $(AWS_PROFILE)
+	@echo "Terraform backend bucket '$(TF_STATE_BUCKET_NAME)' is ready."
+
+stage-init: ## Initialize Terraform backend for stage
+	terraform init -reconfigure \
+		-backend-config="bucket=$(TF_STATE_BUCKET_NAME)" \
+		-backend-config="key=stage/terraform.tfstate" \
+		-backend-config="region=$(AWS_REGION)"
+
+prod-init: ## Initialize Terraform backend for prod
+	terraform init -reconfigure \
+		-backend-config="bucket=$(TF_STATE_BUCKET_NAME)" \
+		-backend-config="key=prod/terraform.tfstate" \
+		-backend-config="region=$(AWS_REGION)"
+
+init-all: ## Initialize both stage and prod backends
+	stage-init prod-init
+
+stage-plan: ## Plan Terraform changes for stage
+	@echo "Loading stage tfvars: $(STAGE_TFVARS)"
+	AWS_PROFILE=$(AWS_PROFILE) terraform plan $(STAGE_FLAGS)
+
+stage-apply: ## Apply Terraform changes for stage
+	AWS_PROFILE=$(AWS_PROFILE) terraform apply $(STAGE_FLAGS)
+
+prod-plan: ## Plan Terraform changes for prod
+	@echo "Loading prod tfvars: $(PROD_TFVARS)"
+	AWS_PROFILE=$(AWS_PROFILE) terraform plan $(PROD_FLAGS)
+
+prod-apply: ## Apply Terraform changes for prod
+	AWS_PROFILE=$(AWS_PROFILE) terraform apply $(PROD_FLAGS)
+
+# Debug command to see what files are loaded
+debug-stage: ## Debug: list stage .tfvars files
+	@echo "Stage TFVARS files:"
+	@for file in $(STAGE_TFVARS); do echo "  - $$file"; done
+	@echo "Flags: $(STAGE_FLAGS)"
+
+debug-prod: ## Debug: list prod .tfvars files
+	@echo "Prod TFVARS files:"
+	@for file in $(PROD_TFVARS); do echo "  - $$file"; done
+	@echo "Flags: $(PROD_FLAGS)"
+	
+infracost: ## Show cost estimate using Infracost
+	infracost breakdown --path . --show-skipped
+
+fmt: ## Format all .tf files
+	terraform fmt -recursive
+
+validate: ## Validate Terraform configuration
+	terraform validate

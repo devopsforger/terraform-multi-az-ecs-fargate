@@ -1,0 +1,6 @@
+environment = "stage"
+project     = "forger"
+createdBy   = "David Essien"
+owner       = "DevOps Forge"
+account_id  = "014208335592"
+usedBy      = "DevOps Team"
