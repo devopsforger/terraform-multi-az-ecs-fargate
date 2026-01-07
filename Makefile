@@ -1,5 +1,5 @@
 .PHONY: help init-backend stage-init prod-init init-all stage-plan stage-apply prod-plan prod-apply \
-	stage-destroy prod-destroy stage-destroy-all prod-destroy-all \
+	stage-plan-show prod-plan-show stage-destroy prod-destroy stage-destroy-all prod-destroy-all \
 	debug-stage debug-prod infracost fmt validate
 
 AWS_REGION := us-east-1
@@ -48,14 +48,20 @@ init-all: ## Initialize both stage and prod backends
 
 stage-plan: ## Plan Terraform changes for stage
 	@echo "Loading stage tfvars: $(STAGE_TFVARS)"
-	@env $(CREDENTIAL_ENV) terraform plan $(STAGE_FLAGS)
+	@env $(CREDENTIAL_ENV) terraform plan $(STAGE_FLAGS) -out=stage.tfplan
+
+stage-plan-show: ## Show detailed plan output from stage.tfplan
+	@env $(CREDENTIAL_ENV) terraform show -no-color stage.tfplan
 
 stage-apply: ## Apply Terraform changes for stage
 	@env $(CREDENTIAL_ENV) terraform apply $(STAGE_FLAGS)
 
 prod-plan: ## Plan Terraform changes for prod
 	@echo "Loading prod tfvars: $(PROD_TFVARS)"
-	@env $(CREDENTIAL_ENV) terraform plan $(PROD_FLAGS)
+	@env $(CREDENTIAL_ENV) terraform plan $(PROD_FLAGS) -out=prod.tfplan
+
+prod-plan-show: ## Show detailed plan output from prod.tfplan  
+	@env $(CREDENTIAL_ENV) terraform show -no-color prod.tfplan
 
 prod-apply: ## Apply Terraform changes for prod
 	@env $(CREDENTIAL_ENV) terraform apply $(PROD_FLAGS)

@@ -38,3 +38,4 @@ terraform.rc
 combine.sh
 project-combined.txt
 .env
+*.tfplan
