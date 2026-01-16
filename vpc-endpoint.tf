@@ -28,7 +28,7 @@ variable "interface_endpoints" {
 module "gateway_endpoints" {
   for_each = var.gateway_endpoints
 
-  source = "/media/davidshare/Tersu/TersuCorp/TersuLabs/learning/DevOps/terraform-aws-modules/vpc_endpoint/"
+  source = "github.com/davidshare/terraform-aws-modules//vpc_endpoint?ref=vpc_endpoint-v1.0.0"
 
   vpc_id            = module.vpc[each.value.vpc_name].id
   vpc_endpoint_type = "Gateway"
