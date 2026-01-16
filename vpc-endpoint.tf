@@ -42,7 +42,7 @@ module "gateway_endpoints" {
 module "interface_endpoints" {
   for_each = var.interface_endpoints
 
-  source = "/media/davidshare/Tersu/TersuCorp/TersuLabs/learning/DevOps/terraform-aws-modules/vpc_endpoint/"
+  source = "github.com/davidshare/terraform-aws-modules//vpc_endpoint?ref=vpc_endpoint-v1.0.0"
 
   vpc_id              = module.vpc[each.value.vpc_name].id
   vpc_endpoint_type   = "Interface"
@@ -73,7 +73,7 @@ locals {
 module "vpc_endpoint_policies" {
   for_each = var.endpoint_policies
 
-  source            = "/media/davidshare/Tersu/TersuCorp/TersuLabs/learning/DevOps/terraform-aws-modules/vpc_endpoint_policy/"
+  source            = "github.com/davidshare/terraform-aws-modules//vpc_endpoint_policy?ref=vpc_endpoint_policy-v1.0.0"
   vpc_endpoint_id   = local.all_vpc_endpoint_ids[each.key]
   policy            = each.value.policy
   endpoint_name     = each.key  # Optional but useful for validation messages
