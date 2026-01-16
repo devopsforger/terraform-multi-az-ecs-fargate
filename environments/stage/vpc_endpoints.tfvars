@@ -64,3 +64,169 @@ interface_endpoints = {
     tags                = { Name = "sts-endpoint" }
   }
 }
+
+# ====================================
+# VPC Endpoint Policies
+# ====================================
+endpoint_policies = {
+  # S3 Gateway Endpoint Policy
+  s3 = {
+    policy = <<-EOF
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+              "s3:GetObject",
+              "s3:ListBucket",
+              "s3:GetBucketLocation"
+            ],
+            "Resource": [
+              "arn:aws:s3:::*",
+              "arn:aws:s3:::*/*"
+            ]
+          }
+        ]
+      }
+    EOF
+  }
+
+  # ECR API Interface Endpoint Policy
+  ecr_api = {
+    policy = <<-EOF
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+              "ecr:GetAuthorizationToken",
+              "ecr:BatchCheckLayerAvailability",
+              "ecr:GetDownloadUrlForLayer",
+              "ecr:DescribeRepositories",
+              "ecr:ListImages",
+              "ecr:DescribeImages",
+              "ecr:BatchGetImage"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+    EOF
+  }
+
+  # ECR Docker (DKR) Interface Endpoint Policy
+  ecr_dkr = {
+    policy = <<-EOF
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+              "ecr:GetAuthorizationToken",
+              "ecr:BatchCheckLayerAvailability",
+              "ecr:GetDownloadUrlForLayer",
+              "ecr:BatchGetImage"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+    EOF
+  }
+
+  # CloudWatch Logs Interface Endpoint Policy
+  logs = {
+    policy = <<-EOF
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+              "logs:PutLogEvents",
+              "logs:CreateLogStream",
+              "logs:DescribeLogStreams",
+              "logs:CreateLogGroup",
+              "logs:DescribeLogGroups"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+    EOF
+  }
+
+  # Secrets Manager Interface Endpoint Policy
+  secretsmanager = {
+    policy = <<-EOF
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+              "secretsmanager:GetSecretValue",
+              "secretsmanager:DescribeSecret"
+            ],
+            "Resource": "arn:aws:secretsmanager:us-east-1:*:secret:*"
+          }
+        ]
+      }
+    EOF
+  }
+
+  # SSM Interface Endpoint Policy
+  ssm = {
+    policy = <<-EOF
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+              "ssm:GetParameter",
+              "ssm:GetParameters",
+              "ssm:GetParametersByPath",
+              "ssm:DescribeParameters",
+              "ssm:GetDocument",
+              "ssm:DescribeDocument",
+              "ssm:ListDocuments"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+    EOF
+  }
+
+  # STS Interface Endpoint Policy
+  sts = {
+    policy = <<-EOF
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+              "sts:AssumeRole",
+              "sts:GetCallerIdentity",
+              "sts:GetSessionToken",
+              "sts:DecodeAuthorizationMessage"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+    EOF
+  }
+}

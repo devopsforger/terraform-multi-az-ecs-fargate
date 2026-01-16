@@ -52,3 +52,34 @@ module "interface_endpoints" {
   private_dns_enabled = each.value.private_dns_enabled
   tags                = merge(each.value.tags, local.tags)
 }
+
+
+variable "endpoint_policies" {
+  description = "Map of VPC endpoint policies, keyed by the same name used in gateway_endpoints or interface_endpoints (e.g., 's3', 'ecr_api')."
+  type = map(object({
+    policy = optional(string, null)
+  }))
+  default = {}
+}
+
+locals {
+  # Merge IDs from both gateway and interface endpoint modules
+  all_vpc_endpoint_ids = merge(
+    { for k, m in module.gateway_endpoints : k => m.id },
+    { for k, m in module.interface_endpoints : k => m.id }
+  )
+}
+
+module "vpc_endpoint_policies" {
+  for_each = var.endpoint_policies
+
+  source            = "/media/davidshare/Tersu/TersuCorp/TersuLabs/learning/DevOps/terraform-aws-modules/vpc_endpoint_policy/"
+  vpc_endpoint_id   = local.all_vpc_endpoint_ids[each.key]
+  policy            = each.value.policy
+  endpoint_name     = each.key  # Optional but useful for validation messages
+
+  depends_on = [
+    module.gateway_endpoints,
+    module.interface_endpoints
+  ]
+}
