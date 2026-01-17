@@ -39,3 +39,4 @@ combine.sh
 project-combined.txt
 .env
 *.tfplan
+combined.txt
