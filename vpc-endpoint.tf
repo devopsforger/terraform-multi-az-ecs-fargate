@@ -48,7 +48,7 @@ module "interface_endpoints" {
   vpc_endpoint_type   = "Interface"
   service_name        = each.value.service_name
   subnet_ids          = [for sk in each.value.subnet_keys : module.subnets[sk].id]
-  security_group_ids  = [for key in each.value.security_group_keys : module.sg[key].id]
+  security_group_ids  = [for key in each.value.security_group_keys : module.security_groups[key].id]
   private_dns_enabled = each.value.private_dns_enabled
   tags                = merge(each.value.tags, local.tags)
 }

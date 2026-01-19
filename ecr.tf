@@ -34,7 +34,7 @@ variable "ecr_repository_policies" {
 module "ecr_repository" {
   for_each = var.ecr_repositories
 
-  source = "github.com/davidshare/terraform-aws-modules//ecr_repository?ref=ecr_repository-v1.0.0"
+  source                       = "github.com/davidshare/terraform-aws-modules//ecr_repository?ref=ecr_repository-v1.0.0"
   name                         = each.value.name
   image_tag_mutability         = each.value.image_tag_mutability
   image_scanning_configuration = each.value.image_scanning_configuration
@@ -47,7 +47,7 @@ module "ecr_repository" {
 module "ecr_repository_policy" {
   for_each = var.ecr_repository_policies
 
-  source = "github.com/davidshare/terraform-aws-modules//ecr_repository_policy?ref=ecr_repository_policy-v1.0.0"
+  source     = "github.com/davidshare/terraform-aws-modules//ecr_repository_policy?ref=ecr_repository_policy-v1.0.0"
   repository = each.value.repository
   statements = each.value.statements
 }

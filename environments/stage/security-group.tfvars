@@ -8,6 +8,14 @@ security_groups = {
       Purpose   = "Interface-VPC-Endpoints"
       ManagedBy = "Terraform"
     }
+  },
+  backend_api = {
+    vpc_key     = "main"
+    name        = "backend-api-sg"
+    description = "Security group for backend API ECS tasks"
+    tags = {
+      Name = "backend-api-sg"
+    }
   }
 }
 
@@ -27,6 +35,15 @@ security_group_ingress_rules = {
     tags = {
       Rule = "HTTPS-Inbound"
     }
+  },
+  backend_from_alb = {
+    security_group_key = "backend_api"
+    description        = "Allow inbound from ALB"
+    ip_protocol        = "tcp"
+    from_port          = 8000
+    to_port            = 8000
+    cidr_ipv4          = "10.0.0.0/16" # Or better: reference ALB SG later
+    tags               = { Rule = "ALB-to-Backend" }
   }
 
   # Optional: Add HTTP if any endpoint requires it (rare for these services)
@@ -53,5 +70,12 @@ security_group_egress_rules = {
     tags = {
       Rule = "All-Outbound"
     }
+  },
+  backend_to_vpce = {
+    security_group_key = "backend_api"
+    description        = "Allow outbound to VPC endpoints"
+    ip_protocol        = "-1"
+    cidr_ipv4          = "10.0.0.0/16" # VPC CIDR
+    tags               = { Rule = "Backend-to-VPC-Endpoints" }
   }
 }

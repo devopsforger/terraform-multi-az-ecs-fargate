@@ -47,7 +47,7 @@ variable "security_group_egress_rules" {
   default = {}
 }
 
-module "sg" {
+module "security_groups" {
   for_each = var.security_groups
 
   source = "github.com/davidshare/terraform-aws-modules//security_group?ref=security_group-v1.0.0"
@@ -77,7 +77,7 @@ module "sg_ingress_rule" {
 
   source = "github.com/davidshare/terraform-aws-modules//vpc_security_group_ingress_rule?ref=vpc_security_group_ingress_rule-v1.0.0"
 
-  security_group_id            = module.sg[each.value.security_group_key].id
+  security_group_id            = module.security_groups[each.value.security_group_key].id
   description                  = each.value.description
   ip_protocol                  = each.value.ip_protocol
   from_port                    = each.value.from_port
@@ -102,7 +102,7 @@ module "sg_egress_rule" {
 
   source = "github.com/davidshare/terraform-aws-modules//vpc_security_group_egress_rule?ref=vpc_security_group_egress_rule-v1.0.0"
 
-  security_group_id            = module.sg[each.value.security_group_key].id
+  security_group_id            = module.security_groups[each.value.security_group_key].id
   description                  = each.value.description
   ip_protocol                  = each.value.ip_protocol
   from_port                    = each.value.from_port
