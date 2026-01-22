@@ -69,7 +69,7 @@ module "ecs_service" {
   for_each = var.ecs_services
 
   source = "github.com/davidshare/terraform-aws-modules//ecs_service?ref=ecs_service-v1.0.0"
-  
+
 
   name            = each.value.name
   cluster         = module.ecs_cluster[each.value.cluster_key].arn
