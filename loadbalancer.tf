@@ -51,7 +51,8 @@ variable "listeners" {
 module "alb" {
   for_each = var.load_balancers
 
-  source = "github.com/davidshare/terraform-aws-modules//alb?ref=alb-v1.0.0"
+  # source = "github.com/davidshare/terraform-aws-modules//alb?ref=alb-v1.0.0"
+  source = "/media/davidshare/Tersu/TersuCorp/devopsforge/projects/terraform-aws-modules/alb"
 
   name            = each.value.name
   internal        = each.value.internal
@@ -67,7 +68,8 @@ module "alb" {
 module "target_group" {
   for_each = var.target_groups
 
-  source = "github.com/davidshare/terraform-aws-modules//lb_target_group?ref=lb_target_group-v1.0.0"
+  # source = "github.com/davidshare/terraform-aws-modules//lb_target_group?ref=lb_target_group-v1.0.0"
+  source = "/media/davidshare/Tersu/TersuCorp/devopsforge/projects/terraform-aws-modules/lb_target_group"
 
   name        = each.value.name
   port        = each.value.port
