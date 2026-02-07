@@ -16,16 +16,16 @@ variable "security_groups" {
 variable "security_group_ingress_rules" {
   description = "Map of ingress rules for security groups"
   type = map(object({
-    security_group_key           = string # Key from security_groups map (e.g., "vpc_endpoint_sg")
-    description                  = optional(string)
-    ip_protocol                  = string
-    from_port                    = optional(number)
-    to_port                      = optional(number)
-    cidr_ipv4                    = optional(string)
-    cidr_ipv6                    = optional(string)
-    prefix_list_id               = optional(string)
-    referenced_security_group_id = optional(string)
-    tags                         = optional(map(string), {})
+    security_group_key            = string # Key from security_groups map (e.g., "vpc_endpoint_sg")
+    description                   = optional(string)
+    ip_protocol                   = string
+    from_port                     = optional(number)
+    to_port                       = optional(number)
+    cidr_ipv4                     = optional(string)
+    cidr_ipv6                     = optional(string)
+    prefix_list_id                = optional(string)
+    referenced_security_group_key = optional(string)
+    tags                          = optional(map(string), {})
   }))
   default = {}
 }
@@ -33,16 +33,16 @@ variable "security_group_ingress_rules" {
 variable "security_group_egress_rules" {
   description = "Map of egress rules for security groups"
   type = map(object({
-    security_group_key           = string
-    description                  = optional(string)
-    ip_protocol                  = string
-    from_port                    = optional(number)
-    to_port                      = optional(number)
-    cidr_ipv4                    = optional(string)
-    cidr_ipv6                    = optional(string)
-    prefix_list_id               = optional(string)
-    referenced_security_group_id = optional(string)
-    tags                         = optional(map(string), {})
+    security_group_key            = string
+    description                   = optional(string)
+    ip_protocol                   = string
+    from_port                     = optional(number)
+    to_port                       = optional(number)
+    cidr_ipv4                     = optional(string)
+    cidr_ipv6                     = optional(string)
+    prefix_list_id                = optional(string)
+    referenced_security_group_key = optional(string)
+    tags                          = optional(map(string), {})
   }))
   default = {}
 }
@@ -77,15 +77,19 @@ module "sg_ingress_rule" {
 
   source = "github.com/davidshare/terraform-aws-modules//vpc_security_group_ingress_rule?ref=vpc_security_group_ingress_rule-v1.0.0"
 
-  security_group_id            = module.security_groups[each.value.security_group_key].id
-  description                  = each.value.description
-  ip_protocol                  = each.value.ip_protocol
-  from_port                    = each.value.from_port
-  to_port                      = each.value.to_port
-  cidr_ipv4                    = each.value.cidr_ipv4
-  cidr_ipv6                    = each.value.cidr_ipv6
-  prefix_list_id               = each.value.prefix_list_id
-  referenced_security_group_id = each.value.referenced_security_group_id
+  security_group_id = module.security_groups[each.value.security_group_key].id
+  description       = each.value.description
+  ip_protocol       = each.value.ip_protocol
+  from_port         = each.value.from_port
+  to_port           = each.value.to_port
+  cidr_ipv4         = each.value.cidr_ipv4
+  cidr_ipv6         = each.value.cidr_ipv6
+  prefix_list_id    = each.value.prefix_list_id
+  referenced_security_group_id = (
+    each.value.referenced_security_group_key != null
+    ? module.security_groups[each.value.referenced_security_group_key].id
+    : null
+  )
 
   tags = merge(
     {
@@ -102,15 +106,19 @@ module "sg_egress_rule" {
 
   source = "github.com/davidshare/terraform-aws-modules//vpc_security_group_egress_rule?ref=vpc_security_group_egress_rule-v1.0.0"
 
-  security_group_id            = module.security_groups[each.value.security_group_key].id
-  description                  = each.value.description
-  ip_protocol                  = each.value.ip_protocol
-  from_port                    = each.value.from_port
-  to_port                      = each.value.to_port
-  cidr_ipv4                    = each.value.cidr_ipv4
-  cidr_ipv6                    = each.value.cidr_ipv6
-  prefix_list_id               = each.value.prefix_list_id
-  referenced_security_group_id = each.value.referenced_security_group_id
+  security_group_id = module.security_groups[each.value.security_group_key].id
+  description       = each.value.description
+  ip_protocol       = each.value.ip_protocol
+  from_port         = each.value.from_port
+  to_port           = each.value.to_port
+  cidr_ipv4         = each.value.cidr_ipv4
+  cidr_ipv6         = each.value.cidr_ipv6
+  prefix_list_id    = each.value.prefix_list_id
+  referenced_security_group_id = (
+    each.value.referenced_security_group_key != null
+    ? module.security_groups[each.value.referenced_security_group_key].id
+    : null
+  )
 
   tags = merge(
     {

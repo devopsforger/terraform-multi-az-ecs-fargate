@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 6.28.0"
+      version = "~> 6.31.0"
     }
   }
 
@@ -13,8 +13,13 @@ terraform {
   }
 }
 
+variable "aws_region" {
+  type    = string
+  default = "us-east-1"
+}
+
 # Configure the AWS Provider
 provider "aws" {
-  region  = "us-east-1"
+  region  = var.aws_region
   profile = "devopsforge"
 }

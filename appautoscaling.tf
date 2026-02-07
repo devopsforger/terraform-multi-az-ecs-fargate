@@ -1,3 +1,10 @@
+locals {
+  ecs_service_resource_ids = {
+    for k, svc in var.ecs_services :
+    k => "service/${module.ecs_cluster[svc.cluster_key].name}/${svc.name}"
+  }
+}
+
 # ====================================
 # Auto Scaling Variables
 # ====================================
@@ -8,7 +15,7 @@ variable "scaling_targets" {
     min_capacity       = number
     max_capacity       = number
     service_namespace  = string
-    resource_id        = string
+    ecs_service_key    = string
     scalable_dimension = string
     tags               = map(string)
   }))
@@ -18,10 +25,11 @@ variable "scaling_policies" {
   description = "Map of Application Auto Scaling policies"
   type = map(object({
     name                   = string
+    ecs_service_key        = string
     service_namespace      = string
-    resource_id            = string
     scalable_dimension     = string
     target_value           = number
+    target_group_key       = string
     predefined_metric_type = string
     resource_label         = optional(string)
     scale_in_cooldown      = optional(number)
@@ -42,9 +50,11 @@ module "scaling_target" {
   min_capacity       = each.value.min_capacity
   max_capacity       = each.value.max_capacity
   service_namespace  = each.value.service_namespace
-  resource_id        = each.value.resource_id
+  resource_id        = local.ecs_service_resource_ids[each.value.ecs_service_key]
   scalable_dimension = each.value.scalable_dimension
   tags               = merge(each.value.tags, local.tags)
+
+  depends_on = [module.alb, module.target_group]
 }
 
 # ====================================
@@ -58,7 +68,7 @@ module "scaling_policy" {
 
   name               = each.value.name
   service_namespace  = each.value.service_namespace
-  resource_id        = each.value.resource_id
+  resource_id        = local.ecs_service_resource_ids[each.value.ecs_service_key]
   scalable_dimension = each.value.scalable_dimension
   policy_type        = "TargetTrackingScaling"
 
@@ -71,7 +81,9 @@ module "scaling_policy" {
     predefined_metric_specification = {
       predefined_metric_type = each.value.predefined_metric_type
       # Format: <load-balancer-arn-suffix>/<target-group-arn-suffix>
-      resource_label = "${module.alb.backend.arn_suffix}/${module.target_group.backend_api.arn_suffix}"
+      resource_label = "${module.alb[each.value.resource_label].arn_suffix}/${module.target_group[each.value.target_group_key].arn_suffix}"
     }
   }
+
+  depends_on = [module.scaling_target]
 }

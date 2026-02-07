@@ -1,30 +1,30 @@
 ecs_clusters = {
   "backend" = {
-    name = "backend-prod"
+    name = "backend-stage"
     tags = {
-      Name        = "backend-prod-cluster"
-      Environment = "production"
-      Service     = "fastapi"
+      Name    = "backend-stage-cluster"
+      Service = "fastapi"
     }
   }
 }
 
 ecs_task_definitions = {
-  "backend_api" = {
-    family                   = "backend-api"
+  "backend-app" = {
+    family                   = "backend-app"
     requires_compatibilities = ["FARGATE"]
     network_mode             = "awsvpc"
     cpu                      = 512
     memory                   = 1024
 
-    execution_role_arn = "arn:aws:iam::123456789012:role/ecsTaskExecutionRole"
-    task_role_arn      = "arn:aws:iam::123456789012:role/backendTaskRole"
+    execution_role_name = "forger-stage-ecs-task-execution"
+    task_role_name      = "forger-stage-ecs-task"
 
     container_definitions = [
       {
-        name      = "backend-api"
-        image     = "123456789012.dkr.ecr.us-east-1.amazonaws.com/backend-api:latest"
-        essential = true
+        name           = "backend-app"
+        image          = "backend-app"
+        image_repo_key = "backend-app"
+        essential      = true
 
         portMappings = [
           {
@@ -34,7 +34,7 @@ ecs_task_definitions = {
         ]
 
         healthCheck = {
-          command     = ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+          command     = ["CMD-SHELL", "ps aux | grep -v grep | grep uvicorn || exit 1"]
           interval    = 30
           timeout     = 5
           retries     = 3
@@ -44,26 +44,26 @@ ecs_task_definitions = {
         logConfiguration = {
           logDriver = "awslogs"
           options = {
-            awslogs-group         = "/ecs/backend-api"
+            awslogs-group         = "/ecs/backend-app"
             awslogs-region        = "us-east-1"
             awslogs-stream-prefix = "ecs"
+            awslogs-create-group  = "true"
           }
         }
       }
     ]
 
     tags = {
-      Name        = "backend-api-task"
-      Environment = "production"
+      Name = "backend-app-task"
     }
   }
 }
 
 ecs_services = {
-  "backend_api" = {
-    name             = "backend-api"
+  "backend-app" = {
+    name             = "backend-app"
     cluster_key      = "backend"
-    task_def_key     = "backend_api"
+    task_def_key     = "backend-app"
     desired_count    = 2
     launch_type      = "FARGATE"
     platform_version = "LATEST"
@@ -76,17 +76,17 @@ ecs_services = {
     ]
 
     security_groups = [
-      "backend_api"
+      "backend-app"
     ]
 
-    target_group_arn = "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/backend-api/abc123"
+    target_group_name = "backend-app"
 
-    container_name = "backend-api"
-    container_port = 8000
+    container_name                    = "backend-app"
+    container_port                    = 8000
+    health_check_grace_period_seconds = 180
 
     tags = {
-      Name        = "backend-api-service"
-      Environment = "production"
+      Name = "backend-app-service"
     }
   }
 }

@@ -3,16 +3,13 @@
 # ====================================
 load_balancers = {
   backend = {
-    name     = "forger-stage-backend-alb"
-    internal = true # Keep it private (only accessible from VPC or API Gateway)
-    vpc_key  = "main"
-    subnets = [
-      "nat_public_1", # ALB must be in public or application subnets
-      "nat_public_2"
-    ]
+    name                = "forger-stage-backend-alb"
+    internal            = true # Keep it private (only accessible from VPC or API Gateway)
+    vpc_key             = "main"
+    subnets             = ["backend_private_1", "backend_private_2"]
+    security_group_keys = ["backend-app"]
     tags = {
-      Name        = "Backend-ALB"
-      Environment = "stage"
+      Name = "Backend-ALB"
     }
   }
 }
@@ -21,8 +18,8 @@ load_balancers = {
 # Target Group (for FastAPI)
 # ====================================
 target_groups = {
-  backend_api = {
-    name                 = "forger-stage-backend-api-tg"
+  backend-app = {
+    name                 = "forger-stage-backend-app-tg"
     port                 = 8000
     protocol             = "HTTP"
     vpc_key              = "main"
@@ -34,7 +31,7 @@ target_groups = {
     health_check_path    = "/health"
     deregistration_delay = 300
     tags = {
-      Name = "Backend-API-TG"
+      Name = "backend-app-TG"
     }
   }
 }
@@ -48,7 +45,7 @@ listeners = {
     port                = 80
     protocol            = "HTTP"
     default_action_type = "forward"
-    target_group_key    = "backend_api"
+    target_group_key    = "backend-app"
     tags = {
       Name = "Backend-HTTP-Listener"
     }
@@ -62,7 +59,7 @@ listeners = {
   #   ssl_policy          = "ELBSecurityPolicy-TLS13-1-2-2021-06"
   #   certificate_arn     = "arn:aws:acm:us-east-1:014208335592:certificate/..."
   #   default_action_type = "forward"
-  #   target_group_key    = "backend_api"
+  #   target_group_key    = "backend-app"
   #   tags = {
   #     Name = "Backend-HTTPS-Listener"
   #   }

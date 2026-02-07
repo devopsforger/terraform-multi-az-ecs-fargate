@@ -2,16 +2,15 @@
 # ECR Repositories
 # ====================================
 ecr_repositories = {
-  backend_app = {
+  backend-app = {
     name                 = "forger-stage-backend-app"
     image_tag_mutability = "IMMUTABLE"
     image_scanning_configuration = {
       scan_on_push = true
     }
     tags = {
-      Environment = "stage"
-      Project     = "forger"
-      Name        = "backend-app"
+      Project = "forger"
+      Name    = "backend-app"
     }
   }
 }
@@ -21,7 +20,7 @@ ecr_repositories = {
 # ECR Repositories Policies
 # ====================================
 ecr_repository_policies = {
-  backend_app_policy = {
+  backend-app_policy = {
     repository = "forger-stage-backend-app"
     statements = [
       {

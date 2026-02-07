@@ -5,11 +5,12 @@
 variable "load_balancers" {
   description = "Map of Application Load Balancers"
   type = map(object({
-    name     = string
-    internal = bool
-    vpc_key  = string
-    subnets  = list(string)
-    tags     = map(string)
+    name                = string
+    internal            = bool
+    vpc_key             = string
+    subnets             = list(string)
+    security_group_keys = optional(list(string))
+    tags                = map(string)
   }))
 }
 
@@ -57,7 +58,7 @@ module "alb" {
   name            = each.value.name
   internal        = each.value.internal
   subnets         = [for k in each.value.subnets : module.subnets[k].id]
-  security_groups = [] # Will be auto-created or passed separately
+  security_groups = [for sg_key in each.value.security_group_keys : module.security_groups[sg_key].id]
 
   tags = merge(each.value.tags, local.tags)
 }

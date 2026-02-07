@@ -9,12 +9,28 @@ security_groups = {
       ManagedBy = "Terraform"
     }
   },
-  backend_api = {
+  backend-app = {
     vpc_key     = "main"
-    name        = "backend-api-sg"
+    name        = "backend-app-sg"
     description = "Security group for backend API ECS tasks"
     tags = {
-      Name = "backend-api-sg"
+      Name = "backend-app-sg"
+    }
+  },
+  database_sg = {
+    vpc_key     = "main"
+    name        = "forger-database-sg"
+    description = "Allow backend ECS tasks to access RDS"
+    tags = {
+      Name = "forger-database-sg"
+    }
+  },
+  backend_alb = {
+    vpc_key     = "main"
+    name        = "backend-alb-sg"
+    description = "Public ALB security group for backend service"
+    tags = {
+      Name = "backend-alb-sg"
     }
   }
 }
@@ -37,24 +53,31 @@ security_group_ingress_rules = {
     }
   },
   backend_from_alb = {
-    security_group_key = "backend_api"
-    description        = "Allow inbound from ALB"
-    ip_protocol        = "tcp"
-    from_port          = 8000
-    to_port            = 8000
-    cidr_ipv4          = "10.0.0.0/16" # Or better: reference ALB SG later
-    tags               = { Rule = "ALB-to-Backend" }
-  }
+    security_group_key            = "backend-app"
+    description                   = "Allow inbound from ALB"
+    ip_protocol                   = "tcp"
+    from_port                     = 8000
+    to_port                       = 8000
+    referenced_security_group_key = "backend-app"
+    tags                          = { Rule = "ALB-to-Backend" }
+  },
 
-  # Optional: Add HTTP if any endpoint requires it (rare for these services)
-  # vpce_http_from_vpc = {
-  #   security_group_key = "vpc_endpoint_sg"
-  #   description        = "Allow HTTP inbound from within the VPC"
-  #   ip_protocol        = "tcp"
-  #   from_port          = 80
-  #   to_port            = 80
-  #   cidr_ipv4          = "10.0.0.0/16"
-  # }
+  db_from_backend = {
+    security_group_key            = "database_sg"
+    description                   = "Allow inbound from backend ECS tasks"
+    ip_protocol                   = "tcp"
+    from_port                     = 5432 # PostgreSQL
+    to_port                       = 5432
+    referenced_security_group_key = "backend-app"
+  },
+
+  alb_http = {
+    security_group_key = "backend_alb"
+    ip_protocol        = "tcp"
+    from_port          = 443
+    to_port            = 443
+    cidr_ipv4          = "0.0.0.0/0"
+  }
 }
 
 # ====================================
@@ -72,10 +95,10 @@ security_group_egress_rules = {
     }
   },
   backend_to_vpce = {
-    security_group_key = "backend_api"
-    description        = "Allow outbound to VPC endpoints"
-    ip_protocol        = "-1"
-    cidr_ipv4          = "10.0.0.0/16" # VPC CIDR
-    tags               = { Rule = "Backend-to-VPC-Endpoints" }
+    security_group_key            = "backend-app"
+    description                   = "Allow outbound to VPC endpoints"
+    ip_protocol                   = "-1"
+    referenced_security_group_key = "vpc_endpoint_sg"
+    tags                          = { Rule = "Backend-to-VPC-Endpoints" }
   }
 }

@@ -2,15 +2,14 @@
 # Auto Scaling Target for Backend API
 # ====================================
 scaling_targets = {
-  backend_api = {
-    min_capacity      = 1
-    max_capacity      = 5
-    service_namespace = "ecs"
-    # Format: service/<cluster-name>/<service-name>
-    resource_id        = "service/backend-prod/backend-api"
+  backend-app = {
+    min_capacity       = 1
+    max_capacity       = 5
+    service_namespace  = "ecs"
+    ecs_service_key    = "backend-app"
     scalable_dimension = "ecs:service:DesiredCount"
     tags = {
-      Name = "backend-api-scaling-target"
+      Name = "backend-app-scaling-target"
     }
   }
 }
@@ -19,10 +18,10 @@ scaling_targets = {
 # Auto Scaling Policy (ALB Request Count)
 # ====================================
 scaling_policies = {
-  backend_api_request_count = {
-    name               = "backend-api-request-count"
+  backend-app_request_count = {
+    name               = "backend-app-request-count"
+    ecs_service_key    = "backend-app"
     service_namespace  = "ecs"
-    resource_id        = "service/backend-prod/backend-api"
     scalable_dimension = "ecs:service:DesiredCount"
 
     # Scale based on ALB requests per target
@@ -33,5 +32,7 @@ scaling_policies = {
     scale_in_cooldown  = 300    # 5 minutes
     scale_out_cooldown = 60     # 1 minute
     disable_scale_in   = false
+    resource_label     = "backend"
+    target_group_key   = "backend-app"
   }
 }
