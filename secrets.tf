@@ -40,7 +40,8 @@ variable "ssm_parameters" {
     name        = string
     description = string
     type        = string # String, StringList, SecureString
-    value       = string
+    alb_key   = optional(string)
+    value       = optional(string)
     key_id      = optional(string) # For SecureString
     tags        = map(string)
   }))
@@ -110,7 +111,7 @@ module "ssm_parameter" {
   name        = each.value.name
   description = each.value.description
   type        = each.value.type
-  value       = each.value.value
+  value       = each.value.alb_key != null ? module.alb[each.value.alb_key].dns_name : each.value.value
   key_id      = each.value.key_id
   tags        = merge(each.value.tags, local.tags)
 }

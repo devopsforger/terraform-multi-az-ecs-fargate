@@ -48,27 +48,30 @@ iam_policies = {
     description = "Permissions for backend app to access Secrets Manager, SSM, etc."
     policy      = <<-EOF
       {
-        "Version": "2012-10-17",
-        "Statement": [
-          {
-            "Effect": "Allow",
-            "Action": [
-              "secretsmanager:GetSecretValue",
-              "secretsmanager:DescribeSecret"
-            ],
-            "Resource": "arn:aws:secretsmanager:us-east-1:014208335592:secret:*"
-          },
-          {
-            "Effect": "Allow",
-            "Action": [
-              "ssm:GetParameter",
-              "ssm:GetParameters",
-              "ssm:GetParametersByPath"
-            ],
-            "Resource": "arn:aws:ssm:us-east-1:*:parameter/*"
-          }
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ],
+        "Resource": "arn:aws:secretsmanager:us-east-1:014208335592:secret:forger/stage/backend/db-password-*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ],
+        "Resource": [
+          "arn:aws:ssm:us-east-1:014208335592:parameter/forger/stage/backend/api-url",
+          "arn:aws:ssm:us-east-1:014208335592:parameter/forger/stage/backend/feature-flags"
         ]
       }
+    ]
+  }
     EOF
     tags = {
       Name = "forger-stage-backend-app-policy"

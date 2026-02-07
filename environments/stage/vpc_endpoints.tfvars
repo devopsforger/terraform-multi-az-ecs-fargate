@@ -2,13 +2,6 @@
 # Gateway endpoints
 # ====================================
 gateway_endpoints = {
-  s3 = {
-    vpc_name         = "main"
-    service_name     = "com.amazonaws.us-east-1.s3"
-    route_table_keys = ["backend_private_az_a", "backend_private_az_b"]
-    policy           = null
-    tags             = { Name = "s3-endpoint" }
-  }
 }
 
 # ====================================
@@ -69,29 +62,6 @@ interface_endpoints = {
 # VPC Endpoint Policies
 # ====================================
 endpoint_policies = {
-  # S3 Gateway Endpoint Policy
-  s3 = {
-    policy = <<-EOF
-      {
-        "Version": "2012-10-17",
-        "Statement": [
-          {
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": [
-              "s3:GetObject",
-              "s3:ListBucket",
-              "s3:GetBucketLocation"
-            ],
-            "Resource": [
-              "arn:aws:s3:::*",
-              "arn:aws:s3:::*/*"
-            ]
-          }
-        ]
-      }
-    EOF
-  }
 
   # ECR API Interface Endpoint Policy
   ecr_api = {

@@ -58,7 +58,7 @@ security_group_ingress_rules = {
     ip_protocol                   = "tcp"
     from_port                     = 8000
     to_port                       = 8000
-    referenced_security_group_key = "backend-app"
+    referenced_security_group_key = "backend_alb"
     tags                          = { Rule = "ALB-to-Backend" }
   },
 
@@ -74,8 +74,8 @@ security_group_ingress_rules = {
   alb_http = {
     security_group_key = "backend_alb"
     ip_protocol        = "tcp"
-    from_port          = 443
-    to_port            = 443
+    from_port          = 80
+    to_port            = 80
     cidr_ipv4          = "0.0.0.0/0"
   }
 }

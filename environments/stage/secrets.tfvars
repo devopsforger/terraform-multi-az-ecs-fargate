@@ -55,6 +55,7 @@ ssm_parameters = {
     description = "Backend API URL"
     type        = "String"
     value       = "https://api.stage.forger.dev"
+    alb_key   = "backend-app"
     tags = {
       Name = "backend-app-url"
     }

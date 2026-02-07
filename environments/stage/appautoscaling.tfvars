@@ -32,7 +32,7 @@ scaling_policies = {
     scale_in_cooldown  = 300    # 5 minutes
     scale_out_cooldown = 60     # 1 minute
     disable_scale_in   = false
-    resource_label     = "backend"
+    resource_label     = "backend-app"
     target_group_key   = "backend-app"
   }
 }

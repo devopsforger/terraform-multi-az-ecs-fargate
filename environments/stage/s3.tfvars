@@ -5,9 +5,7 @@ s3_buckets = {
   frontend = {
     bucket_prefix = "forger-stage-frontend-" # Auto-generates unique name
     force_destroy = true                     # Only for stage! Set to false in prod
-    tags = {
-      Name = "forger-stage-frontend-bucket"
-    },
+
     server_side_encryption_rules = [
       {
         apply_server_side_encryption_by_default = {
@@ -19,6 +17,19 @@ s3_buckets = {
       status     = "Enabled"
       mfa_delete = "Disabled"
     }
+
+    tags = {
+      Name = "forger-stage-frontend-bucket"
+    },
+  }
+}
+
+s3_bucket_public_access_blocks = {
+  frontend = {
+    block_public_acls       = false
+    block_public_policy     = false
+    ignore_public_acls      = false
+    restrict_public_buckets = false
   }
 }
 
@@ -49,25 +60,17 @@ s3_policy_documents = {
 
     statements = [
       {
-        sid     = "AllowCloudFrontOAC"
+        sid     = "AllowPublicReadForStaticWebsite"
         effect  = "Allow"
         actions = ["s3:GetObject"]
 
-
         principals = [
           {
-            type        = "Service"
-            identifiers = ["cloudfront.amazonaws.com"]
+            type        = "*"
+            identifiers = ["*"]
           }
         ]
-
-        # Static identifier - will be resolved in s3.tf
-        cloudfront_dist_key = "frontend"
       }
     ]
-
-    tags = {
-      Name = "forger-stage-frontend-policy"
-    }
   }
 }

@@ -2,12 +2,12 @@
 # Application Load Balancer
 # ====================================
 load_balancers = {
-  backend = {
+  backend-app = {
     name                = "forger-stage-backend-alb"
-    internal            = true # Keep it private (only accessible from VPC or API Gateway)
+    internal            = false
     vpc_key             = "main"
-    subnets             = ["backend_private_1", "backend_private_2"]
-    security_group_keys = ["backend-app"]
+    subnets             = ["nat_public_1", "nat_public_2"]
+    security_group_keys = ["backend_alb"]
     tags = {
       Name = "Backend-ALB"
     }
@@ -41,7 +41,7 @@ target_groups = {
 # ====================================
 listeners = {
   backend_http = {
-    load_balancer_key   = "backend"
+    load_balancer_key   = "backend-app"
     port                = 80
     protocol            = "HTTP"
     default_action_type = "forward"
@@ -50,18 +50,4 @@ listeners = {
       Name = "Backend-HTTP-Listener"
     }
   }
-
-  # Uncomment when you have an ACM cert
-  # backend_https = {
-  #   load_balancer_key   = "backend"
-  #   port                = 443
-  #   protocol            = "HTTPS"
-  #   ssl_policy          = "ELBSecurityPolicy-TLS13-1-2-2021-06"
-  #   certificate_arn     = "arn:aws:acm:us-east-1:014208335592:certificate/..."
-  #   default_action_type = "forward"
-  #   target_group_key    = "backend-app"
-  #   tags = {
-  #     Name = "Backend-HTTPS-Listener"
-  #   }
-  # }
 }

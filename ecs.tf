@@ -27,6 +27,8 @@ variable "ecs_services" {
     desired_count                     = number
     launch_type                       = string
     platform_version                  = string
+    deployment_maximum_percent        = optional(number)
+    deployment_minimum_healthy_percent = optional(number)
     assign_public_ip                  = bool
     subnets                           = list(string)
     security_groups                   = list(string)
@@ -91,6 +93,8 @@ module "ecs_service" {
   desired_count    = each.value.desired_count
   launch_type      = each.value.launch_type
   platform_version = each.value.platform_version
+  deployment_maximum_percent = each.value.deployment_maximum_percent != null ? each.value.deployment_maximum_percent : null 
+  deployment_minimum_healthy_percent = each.value.deployment_minimum_healthy_percent != null ? each.value.deployment_minimum_healthy_percent : null
 
   load_balancer = {
     target_group_arn = module.target_group[each.value.target_group_name].arn

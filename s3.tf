@@ -18,15 +18,6 @@ locals {
       }
     ]
   }
-
-  # Keep your adjusted local for CloudFront ARN injection
-  s3_policy_statements_adjusted = {
-    for k, v in var.s3_policy_documents : k => [
-      for stmt in v.statements : merge(stmt, {
-        condition_values = lookup(stmt, "cloudfront_dist_key", null) != null ? [module.cloudfront_distribution[stmt.cloudfront_dist_key].arn] : lookup(stmt, "condition_values", null)
-      })
-    ]
-  }
 }
 
 # ====================================
@@ -108,6 +99,17 @@ variable "s3_bucket_policies" {
   default = {}
 }
 
+variable "s3_bucket_public_access_blocks" {
+  description = "Map of S3 bucket public access block configurations"
+  type = map(object({
+    block_public_acls       = bool
+    block_public_policy     = bool
+    ignore_public_acls      = bool
+    restrict_public_buckets = bool
+  }))
+  default = {}
+}
+
 # ====================================
 # S3 Bucket
 # ====================================
@@ -139,17 +141,17 @@ module "s3_bucket_ownership_controls" {
 # S3 Bucket Public Access Block
 # ====================================
 module "s3_bucket_public_access_block" {
-  for_each = var.s3_buckets
+  for_each = var.s3_bucket_public_access_blocks
 
   # source = "github.com/davidshare/terraform-aws-modules//s3_bucket_public_access_block?ref=s3_bucket_public_access_block-v1.0.0"
   source = "/media/davidshare/Tersu/TersuCorp/devopsforge/projects/terraform-aws-modules/s3_bucket_public_access_block"
 
   bucket = module.s3_bucket[each.key].arn
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  block_public_acls       = each.value.block_public_acls
+  block_public_policy     = each.value.block_public_policy
+  ignore_public_acls      = each.value.ignore_public_acls
+  restrict_public_buckets = each.value.restrict_public_buckets
 }
 
 # ====================================
@@ -172,7 +174,7 @@ module "s3_bucket_website_configuration" {
 # S3 Bucket Policy
 # ====================================
 module "iam_policy_document_s3" {
-  for_each = local.s3_policy_statements_adjusted
+  for_each = local.s3_policy_statements
 
   source = "/media/davidshare/Tersu/TersuCorp/devopsforge/projects/terraform-aws-modules/iam_policy_document"
 
